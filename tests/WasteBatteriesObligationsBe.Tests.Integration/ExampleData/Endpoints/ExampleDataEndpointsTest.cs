@@ -1,14 +1,14 @@
-using System.Net;
-using System.Net.Http.Json;
-using WasteBatteriesObligationsBe.ExampleData.Models;
-using WasteBatteriesObligationsBe.ExampleData.Repositories;
-using WasteBatteriesObligationsBe.Tests.Integration.Utils;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NSubstitute;
+using System.Net;
+using System.Net.Http.Json;
+using WasteBatteriesObligationsBe.ExampleData.Models;
+using WasteBatteriesObligationsBe.ExampleData.Repositories;
+using WasteBatteriesObligationsBe.Tests.Integration.Utils;
 
 namespace WasteBatteriesObligationsBe.Tests.Integration.ExampleData.Endpoints;
 

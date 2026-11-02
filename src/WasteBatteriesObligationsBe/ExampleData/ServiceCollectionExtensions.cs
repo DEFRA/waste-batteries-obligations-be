@@ -1,5 +1,5 @@
-using System.Diagnostics.CodeAnalysis;
 using FluentValidation;
+using System.Diagnostics.CodeAnalysis;
 using WasteBatteriesObligationsBe.ExampleData.Models;
 using WasteBatteriesObligationsBe.ExampleData.Repositories;
 using WasteBatteriesObligationsBe.ExampleData.Services;
