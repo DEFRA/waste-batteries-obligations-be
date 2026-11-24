@@ -4,12 +4,14 @@ using WasteBatteriesObligationsBe.Authentication;
 using WasteBatteriesObligationsBe.Endpoints;
 using WasteBatteriesObligationsBe.Example;
 using WasteBatteriesObligationsBe.ExampleData;
+using WasteBatteriesObligationsBe.ObligationCalculation;
 using WasteBatteriesObligationsBe.OpenApi;
 using WasteBatteriesObligationsBe.Utils;
 using WasteBatteriesObligationsBe.Utils.Health;
 using WasteBatteriesObligationsBe.Utils.Http;
 using WasteBatteriesObligationsBe.Utils.Logging;
 using WasteBatteriesObligationsBe.Utils.Mongo;
+using WasteBatteriesObligationsBe.Utils.Time;
 
 var app = BuildApp(args);
 await app.RunAsync();
@@ -61,11 +63,13 @@ static void ConfigureServices(WebApplicationBuilder builder)
     services.AddHeaderPropagationFromConfiguration(configuration);
     services.AddProxyHttpClients();
     services.AddMongo(configuration);
+    services.AddTimeProvider();
     services.AddHealth();
     services.AddApiOpenApi();
 
     services.AddExampleServices();
     services.AddExampleDataServices();
+    services.AddObligationCalculationServices();
 }
 
 [ExcludeFromCodeCoverage]

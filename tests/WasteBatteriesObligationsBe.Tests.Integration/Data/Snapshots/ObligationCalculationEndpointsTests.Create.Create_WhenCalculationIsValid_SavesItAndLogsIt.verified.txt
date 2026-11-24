@@ -1,0 +1,46 @@
+{
+  "_id" : { "$oid" : "000000000000000000000001" },
+  "schemeOrgId" : { "$oid" : "674a1b2c3d4e5f6789012345" },
+  "schemeName" : "Sample scheme",
+  "compliancePeriodYear" : { "$numberInt" : "2026" },
+  "obligationTonnes" : { "$numberDecimal" : "2377.618" },
+  "placedOnMarketByYear" : [{
+      "year" : { "$numberInt" : "2024" },
+      "tonnes" : { "$numberDecimal" : "8858.524" },
+      "quartersOfData" : { "$numberInt" : "4" },
+      "annualisedTonnes" : { "$numberDecimal" : "8858.524" },
+      "sourceSubmissionIds" : [{ "$oid" : "84f7c5f37a475b957af7fd65" }]
+    }, {
+      "year" : { "$numberInt" : "2025" },
+      "tonnes" : { "$numberDecimal" : "8331.482" },
+      "quartersOfData" : { "$numberInt" : "4" },
+      "annualisedTonnes" : { "$numberDecimal" : "8331.482" },
+      "sourceSubmissionIds" : [{ "$oid" : "af0df98c8758ee50f4ce7f3c" }]
+    }, {
+      "year" : { "$numberInt" : "2026" },
+      "tonnes" : { "$numberDecimal" : "6231.828" },
+      "quartersOfData" : { "$numberInt" : "2" },
+      "annualisedTonnes" : { "$numberDecimal" : "3888.891" },
+      "isAnnualisedEstimate" : true,
+      "sourceSubmissionIds" : [{ "$oid" : "155437c936fea92e8e4bcf3c" }]
+    }],
+  "parameters" : {
+    "target" : {
+      "type" : "percentage",
+      "value" : { "$numberDecimal" : "45.00" }
+    },
+    "windowYears" : { "$numberInt" : "3" },
+    "denominatorRule" : "yearsWithData"
+  },
+  "trigger" : {
+    "type" : "manual",
+    "actor" : "regulator.user@example.com",
+    "reason" : "Sample recalculation"
+  },
+  "schemaVersion" : { "$numberInt" : "1" },
+  "version" : { "$numberInt" : "1" },
+  "supersedesCalculationId" : null,
+  "isCurrent" : true,
+  "calculatedAtUtc" : { "$date" : { "$numberLong" : "1795168800000" } },
+  "updatedAtUtc" : null
+}

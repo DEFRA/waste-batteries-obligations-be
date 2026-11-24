@@ -86,9 +86,11 @@ dotnet test
 
 `dotnet test` runs both suites. The pull request check and the SonarCloud check both use it. The pull request check fails when line coverage of `WasteBatteriesObligationsBe` is below 90%.
 
-`WasteBatteriesObligationsBe.Tests.Unit` covers validators, configuration gating, and handlers without hosting the API.
+`WasteBatteriesObligationsBe.Tests.Common` holds the shared clock and capturing logger used by both suites.
 
-`WasteBatteriesObligationsBe.Tests.Integration` hosts the API in process with `WebApplicationFactory`. Repositories and other collaborators are substituted with NSubstitute. The tests do not start MongoDB.
+`WasteBatteriesObligationsBe.Tests.Unit` covers validators, configuration gating, handlers, and the obligation calculation service without hosting the API.
+
+`WasteBatteriesObligationsBe.Tests.Integration` hosts the API in process with `WebApplicationFactory`. Example endpoint tests substitute repositories with NSubstitute and do not start MongoDB. Obligation calculation tests start MongoDB with Testcontainers and check versions, decimal tonnes, indexes, and stored-document snapshots.
 
 ### Running
 
