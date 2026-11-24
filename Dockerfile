@@ -3,11 +3,13 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY . .
 WORKDIR "/src"
-# The pull request workflow runs the suite with dotnet test.
-# The image build launches the Debug assemblies directly.
+# Obligation calculation tests start MongoDB through Testcontainers. A docker
+# build has no Docker daemon, so those tests cannot run here. The pull request
+# workflow runs the full suite with dotnet test, where Docker is available.
 RUN dotnet build WasteBatteriesObligationsBe.slnx -c Debug \
  && dotnet tests/WasteBatteriesObligationsBe.Tests.Unit/bin/Debug/net10.0/WasteBatteriesObligationsBe.Tests.Unit.dll \
- && dotnet tests/WasteBatteriesObligationsBe.Tests.Integration/bin/Debug/net10.0/WasteBatteriesObligationsBe.Tests.Integration.dll
+ && dotnet tests/WasteBatteriesObligationsBe.Tests.Integration/bin/Debug/net10.0/WasteBatteriesObligationsBe.Tests.Integration.dll \
+      -namespace- WasteBatteriesObligationsBe.Tests.Integration.ObligationCalculation
 RUN dotnet publish src/WasteBatteriesObligationsBe -c Release -o /app/publish /p:UseAppHost=false
 
 # Final production image
