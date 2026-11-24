@@ -5,6 +5,7 @@ using System.Buffers.Binary;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using WasteBatteriesObligationsBe.Config;
 using WasteBatteriesObligationsBe.ObligationCalculation.Models;
 using WasteBatteriesObligationsBe.ObligationCalculation.Services;
 
@@ -17,10 +18,21 @@ public static class ObligationCalculationEndpoints
     // Used when the caller does not name a year. A fixed year keeps the sample repeatable.
     private const int SampleCompliancePeriodYear = 2026;
 
-    public static RouteGroupBuilder MapObligationCalculationEndpoints(this IEndpointRouteBuilder app)
+    public static RouteGroupBuilder MapObligationCalculationEndpoints(this IEndpointRouteBuilder app) =>
+        app.MapObligationCalculationEndpoints(CdpEnvironment.IsProduction(CdpEnvironment.Read()));
+
+    // TEMPORARY sample writes. CDP sets ASPNETCORE_ENVIRONMENT to Production in every environment,
+    // so that name cannot tell production from dev. The platform name is the ENVIRONMENT variable,
+    // and production is "prod". These routes are left off the table there.
+    internal static RouteGroupBuilder MapObligationCalculationEndpoints(this IEndpointRouteBuilder app, bool isCdpProduction)
     {
         var group = app.MapGroup(RoutePrefix)
             .WithTags("Obligation calculations");
+
+        if (isCdpProduction)
+        {
+            return group;
+        }
 
         group.MapPost(string.Empty, Create)
             .WithName("CreateObligationCalculation")
