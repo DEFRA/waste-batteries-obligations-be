@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
+using System.Buffers.Binary;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -65,7 +66,7 @@ public static class ObligationCalculationEndpoints
             ? ObjectId.GenerateNewId().ToString()
             : key.SchemeOrgId;
         var year = key.CompliancePeriodYear ?? SampleCompliancePeriodYear;
-        var random = RandomFor(schemeOrgId, year, salt);
+        var random = NumbersFor(schemeOrgId, year, salt);
         var currentTonnes = Tonnes(random);
         return new ObligationCalculationBase
         {
@@ -89,15 +90,46 @@ public static class ObligationCalculationEndpoints
         };
     }
 
-    // HashCode changes between processes. The seed has to stay put so a stored snapshot can be compared.
-    private static Random RandomFor(string schemeOrgId, int year, int salt)
+    // HashCode changes between processes. The same scheme, year and salt have to produce the same
+    // figures so a stored snapshot can be compared. These are sample numbers, not a secret.
+    private static SampleNumbers NumbersFor(string schemeOrgId, int year, int salt)
     {
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes($"{schemeOrgId}|{year}|{salt}"));
-        var seed = hash[0] | (hash[1] << 8) | (hash[2] << 16) | (hash[3] << 24);
-        return new Random(seed);
+        var material = Encoding.UTF8.GetBytes($"{schemeOrgId}|{year}|{salt}");
+        return new SampleNumbers(SHA256.HashData(material));
     }
 
-    private static PlacedOnMarketYear Year(int year, string tonnes, bool annualised, Random random)
+    private sealed class SampleNumbers(byte[] seed)
+    {
+        private int _offset;
+
+        public int Next(int maxExclusive) => Next(0, maxExclusive);
+
+        public int Next(int minInclusive, int maxExclusive)
+        {
+            var range = (uint)(maxExclusive - minInclusive);
+            return minInclusive + (int)(NextUnsigned() % range);
+        }
+
+        public void NextBytes(byte[] buffer)
+        {
+            for (var index = 0; index < buffer.Length; index++)
+            {
+                buffer[index] = (byte)NextUnsigned();
+            }
+        }
+
+        private uint NextUnsigned()
+        {
+            Span<byte> material = stackalloc byte[seed.Length + 4];
+            seed.CopyTo(material);
+            BinaryPrimitives.WriteInt32LittleEndian(material[seed.Length..], _offset++);
+            Span<byte> digest = stackalloc byte[32];
+            SHA256.HashData(material, digest);
+            return BinaryPrimitives.ReadUInt32LittleEndian(digest);
+        }
+    }
+
+    private static PlacedOnMarketYear Year(int year, string tonnes, bool annualised, SampleNumbers random)
     {
         var annualisedTonnes = annualised ? DifferentTonnes(random, tonnes) : tonnes;
         return new PlacedOnMarketYear
@@ -111,17 +143,17 @@ public static class ObligationCalculationEndpoints
         };
     }
 
-    private static string SubmissionId(Random random)
+    private static string SubmissionId(SampleNumbers random)
     {
         var bytes = new byte[12];
         random.NextBytes(bytes);
         return new ObjectId(bytes).ToString();
     }
 
-    private static string Tonnes(Random random) =>
+    private static string Tonnes(SampleNumbers random) =>
         string.Create(CultureInfo.InvariantCulture, $"{random.Next(0, 10000)}.{random.Next(0, 1000):000}");
 
-    private static string DifferentTonnes(Random random, string tonnes)
+    private static string DifferentTonnes(SampleNumbers random, string tonnes)
     {
         var other = Tonnes(random);
         if (other != tonnes)
@@ -135,7 +167,7 @@ public static class ObligationCalculationEndpoints
         return string.Create(CultureInfo.InvariantCulture, $"{whole}.{(fraction + 1) % 1000:000}");
     }
 
-    private static ObligationTrigger EventTrigger(Random random) => new()
+    private static ObligationTrigger EventTrigger(SampleNumbers random) => new()
     {
         Type = ObligationTrigger.Event,
         EventId = $"evt-{random.Next(1000, 10000)}",

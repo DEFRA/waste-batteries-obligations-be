@@ -3,26 +3,26 @@
   "schemeOrgId" : { "$oid" : "674a1b2c3d4e5f6789012345" },
   "schemeName" : "Sample scheme",
   "compliancePeriodYear" : { "$numberInt" : "2026" },
-  "obligationTonnes" : { "$numberDecimal" : "2377.618" },
+  "obligationTonnes" : { "$numberDecimal" : "9870.547" },
   "placedOnMarketByYear" : [{
       "year" : { "$numberInt" : "2024" },
-      "tonnes" : { "$numberDecimal" : "8858.524" },
+      "tonnes" : { "$numberDecimal" : "5411.539" },
       "quartersOfData" : { "$numberInt" : "4" },
-      "annualisedTonnes" : { "$numberDecimal" : "8858.524" },
-      "sourceSubmissionIds" : [{ "$oid" : "84f7c5f37a475b957af7fd65" }]
+      "annualisedTonnes" : { "$numberDecimal" : "5411.539" },
+      "sourceSubmissionIds" : [{ "$oid" : "1f0329dbec2868e085c9cd7a" }]
     }, {
       "year" : { "$numberInt" : "2025" },
-      "tonnes" : { "$numberDecimal" : "8331.482" },
+      "tonnes" : { "$numberDecimal" : "26.521" },
       "quartersOfData" : { "$numberInt" : "4" },
-      "annualisedTonnes" : { "$numberDecimal" : "8331.482" },
-      "sourceSubmissionIds" : [{ "$oid" : "af0df98c8758ee50f4ce7f3c" }]
+      "annualisedTonnes" : { "$numberDecimal" : "26.521" },
+      "sourceSubmissionIds" : [{ "$oid" : "c56e11ada51c06cc5dd59c01" }]
     }, {
       "year" : { "$numberInt" : "2026" },
-      "tonnes" : { "$numberDecimal" : "6231.828" },
+      "tonnes" : { "$numberDecimal" : "9461.438" },
       "quartersOfData" : { "$numberInt" : "2" },
-      "annualisedTonnes" : { "$numberDecimal" : "3888.891" },
+      "annualisedTonnes" : { "$numberDecimal" : "2997.122" },
       "isAnnualisedEstimate" : true,
-      "sourceSubmissionIds" : [{ "$oid" : "155437c936fea92e8e4bcf3c" }]
+      "sourceSubmissionIds" : [{ "$oid" : "121eecde183b553992097e1c" }]
     }],
   "parameters" : {
     "target" : {
@@ -33,9 +33,9 @@
     "denominatorRule" : "yearsWithData"
   },
   "trigger" : {
-    "type" : "manual",
-    "actor" : "regulator.user@example.com",
-    "reason" : "Sample recalculation"
+    "type" : "event",
+    "eventId" : "evt-8696",
+    "correlationId" : "corr-1890"
   },
   "schemaVersion" : { "$numberInt" : "1" },
   "version" : { "$numberInt" : "1" },

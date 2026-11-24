@@ -185,17 +185,14 @@ public sealed class ObligationCalculationValidator : AbstractValidator<Obligatio
             expected.Add(calculation.CompliancePeriodYear - offset);
         }
 
-        var actual = new HashSet<int>();
-        foreach (var year in years)
+        // A repeated year is still one year of the window, so the sets would otherwise match.
+        if (years.Any(year => year is null))
         {
-            // A repeated year is still one year of the window, so the sets would otherwise match.
-            if (year is null || !actual.Add(year.Year))
-            {
-                return false;
-            }
+            return false;
         }
 
-        return actual.SetEquals(expected);
+        var actual = years.Select(year => year.Year).ToHashSet();
+        return actual.Count == years.Count && actual.SetEquals(expected);
     }
 
     // Earlier years are not scaled. The compliance year is the only one that can be annualised.
