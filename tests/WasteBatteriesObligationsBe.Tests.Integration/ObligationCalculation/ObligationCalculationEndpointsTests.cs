@@ -14,10 +14,6 @@ public partial class ObligationCalculationEndpointsTests(ObligationCalculationAp
 
     private const string VersionSchemeOrgId = "674a1b2c3d4e5f6789012346";
 
-    private const string CalculateSchemeOrgId = "674a1b2c3d4e5f6789012347";
-
-    private const string CalculateAgainSchemeOrgId = "674a1b2c3d4e5f6789012348";
-
     private const string ConflictSchemeOrgId = "674a1b2c3d4e5f6789012349";
 
     private const string PinnedCalculationId = "000000000000000000000001";
