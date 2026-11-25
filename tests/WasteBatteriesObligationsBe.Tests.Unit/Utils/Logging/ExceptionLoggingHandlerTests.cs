@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using System.Text.Json;
+using WasteBatteriesObligationsBe.Tests.Common;
 using WasteBatteriesObligationsBe.Utils.Logging;
 
 namespace WasteBatteriesObligationsBe.Tests.Unit.Utils.Logging;
