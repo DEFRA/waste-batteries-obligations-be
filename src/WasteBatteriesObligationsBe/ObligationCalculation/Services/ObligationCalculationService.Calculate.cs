@@ -16,12 +16,12 @@ public partial class ObligationCalculationService
     private const int TonnesScale = 3;
 
     public async Task<ObligationCalculationModel> CalculateAsync(
-        CalculationData data,
+        CalculationData calculation,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(data);
-        data = data.Trimmed();
-        var result = await calculationDataValidator.ValidateAsync(data, cancellationToken);
+        ArgumentNullException.ThrowIfNull(calculation);
+        calculation = calculation.Trimmed();
+        var result = await dependencies.CalculationDataValidator.ValidateAsync(calculation, cancellationToken);
         if (!result.IsValid)
         {
             // The future caller is event processing, which cannot correct the payload.
@@ -29,15 +29,15 @@ public partial class ObligationCalculationService
             throw new ValidationException(result.Errors);
         }
 
-        var calculation = ToCalculation(data);
-        var current = await repository.FindCurrentAsync(
-            calculation.SchemeOrgId,
-            calculation.CompliancePeriodYear,
+        var obligation = ToCalculation(calculation);
+        var current = await dependencies.Repository.FindCurrentAsync(
+            obligation.SchemeOrgId,
+            obligation.CompliancePeriodYear,
             cancellationToken);
 
         return current is null
-            ? await CreateAsync(calculation, cancellationToken)
-            : await AddVersionAsync(calculation, cancellationToken);
+            ? await CreateAsync(obligation, cancellationToken)
+            : await AddVersionAsync(obligation, cancellationToken);
     }
 
     // annualisedTonnes for the compliance year is tonnes × 4 ÷ quarters, or zero when the year is missing.
@@ -45,7 +45,7 @@ public partial class ObligationCalculationService
     // The obligation is that average, across the years that have a submission, multiplied by the target percentage (e.g. 45%) from config.
     private ObligationCalculationBase ToCalculation(CalculationData data)
     {
-        var config = calculationOptions.Value;
+        var config = dependencies.Config.Value;
         var complianceYear = data.CompliancePeriodYear;
         var placed = new List<PlacedOnMarketYear>(config.WindowYears);
         decimal unroundedAnnualisedTotal = 0;

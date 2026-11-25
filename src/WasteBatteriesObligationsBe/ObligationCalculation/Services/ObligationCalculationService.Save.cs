@@ -1,7 +1,6 @@
 using FluentValidation;
 using FluentValidation.Results;
 using MongoDB.Bson;
-using WasteBatteriesObligationsBe.ObligationCalculation.Mapping;
 using WasteBatteriesObligationsBe.ObligationCalculation.Models;
 using WasteBatteriesObligationsBe.ObligationCalculation.Validators;
 using WasteBatteriesObligationsBe.Utils.Logging;
@@ -30,7 +29,7 @@ public partial class ObligationCalculationService
         }
 
         var calculatedAtUtc = timeProvider.UtcNow;
-        var stored = mapper.ToNewCalculation(prepared.Calculation, calculatedAtUtc);
+        var stored = dependencies.Mapper.ToNewCalculation(prepared.Calculation, calculatedAtUtc);
 
         try
         {
@@ -38,7 +37,7 @@ public partial class ObligationCalculationService
             await ExecuteSaveAsync(
                 async (transaction, transactionCancellationToken) =>
                 {
-                    await repository.CreateAsync(transaction.Session, stored, transactionCancellationToken);
+                    await dependencies.Repository.CreateAsync(transaction.Session, stored, transactionCancellationToken);
                     return stored;
                 },
                 cancellationToken);
@@ -76,7 +75,7 @@ public partial class ObligationCalculationService
 
         var current = prepared.Current!;
         var calculatedAtUtc = timeProvider.UtcNow;
-        var stored = mapper.ToNewCalculation(
+        var stored = dependencies.Mapper.ToNewCalculation(
             prepared.Calculation,
             calculatedAtUtc,
             version: current.Version + 1,
@@ -122,7 +121,7 @@ public partial class ObligationCalculationService
     {
         ArgumentNullException.ThrowIfNull(calculation);
         calculation = calculation.Trimmed();
-        var result = await validator.ValidateAsync(calculation, cancellationToken);
+        var result = await dependencies.Validator.ValidateAsync(calculation, cancellationToken);
         var failures = new List<ValidationFailure>(result.Errors);
         if (failures.Count > 0)
         {
@@ -132,7 +131,7 @@ public partial class ObligationCalculationService
         ObligationCalculationModel? current = null;
         if (CanLookUpCurrentCalculation(calculation))
         {
-            current = await repository.FindCurrentAsync(calculation.SchemeOrgId, calculation.CompliancePeriodYear, cancellationToken);
+            current = await dependencies.Repository.FindCurrentAsync(calculation.SchemeOrgId, calculation.CompliancePeriodYear, cancellationToken);
         }
 
         return new PreparedCalculation(calculation, failures, current);
@@ -153,7 +152,7 @@ public partial class ObligationCalculationService
         DateTime updatedAtUtc,
         CancellationToken cancellationToken)
     {
-        var superseded = await repository.SupersedeCurrentAsync(
+        var superseded = await dependencies.Repository.SupersedeCurrentAsync(
             transaction.Session,
             currentId,
             updatedAtUtc,
@@ -167,7 +166,7 @@ public partial class ObligationCalculationService
             ]);
         }
 
-        await repository.CreateAsync(transaction.Session, calculation, cancellationToken);
+        await dependencies.Repository.CreateAsync(transaction.Session, calculation, cancellationToken);
     }
 
     private sealed record PreparedCalculation(

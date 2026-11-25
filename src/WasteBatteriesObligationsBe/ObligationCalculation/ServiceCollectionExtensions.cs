@@ -32,6 +32,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IObligationCalculationMapper, ObligationCalculationMapper>();
         services.AddScoped<IValidator<ObligationCalculationBase>, ObligationCalculationBaseValidator>();
         services.AddScoped<IValidator<CalculationData>, CalculationDataValidator>();
+        services.AddScoped<ObligationCalculationDependencies>();
         services.AddScoped<IObligationCalculationService, ObligationCalculationService>();
         return services;
     }

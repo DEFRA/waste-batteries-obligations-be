@@ -313,7 +313,7 @@ public partial class ObligationCalculationServiceTests
         Assert.Equal("4000.000", calculation.PlacedOnMarketByYear[2].AnnualisedTonnes);
     }
 
-    private ObligationCalculationService ReadyService()
+    private static ObligationCalculationService ReadyService()
     {
         var repository = Substitute.For<IObligationCalculationRepository>();
         return Service(

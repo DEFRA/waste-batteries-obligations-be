@@ -41,13 +41,14 @@ public partial class ObligationCalculationServiceTests
     {
         var options = Options.Create(config ?? CalculationConfig());
         return new(
-            repository,
-            unitOfWork ?? Substitute.For<IUnitOfWork>(),
+            new ObligationCalculationDependencies(
+                repository,
+                unitOfWork ?? Substitute.For<IUnitOfWork>(),
+                new ObligationCalculationMapper(),
+                new ObligationCalculationBaseValidator(),
+                new CalculationDataValidator(options),
+                options),
             time ?? new FixedTime(s_utc),
-            new ObligationCalculationMapper(),
-            new ObligationCalculationBaseValidator(),
-            new CalculationDataValidator(options),
-            options,
             logger);
     }
 
