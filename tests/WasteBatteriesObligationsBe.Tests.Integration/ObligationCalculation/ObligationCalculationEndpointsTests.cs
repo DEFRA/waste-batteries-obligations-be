@@ -1,6 +1,8 @@
 using MongoDB.Bson;
 using MongoDB.Bson.IO;
 using MongoDB.Driver;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace WasteBatteriesObligationsBe.Tests.Integration.ObligationCalculation;
 
@@ -11,6 +13,12 @@ public partial class ObligationCalculationEndpointsTests(ObligationCalculationAp
     private const string CreateSchemeOrgId = "674a1b2c3d4e5f6789012345";
 
     private const string VersionSchemeOrgId = "674a1b2c3d4e5f6789012346";
+
+    private const string ConflictSchemeOrgId = "674a1b2c3d4e5f6789012349";
+
+    private const string PinnedCalculationId = "000000000000000000000001";
+
+    private const string PinnedReplacementId = "000000000000000000000002";
 
     private const int CompliancePeriodYear = 2026;
 
@@ -36,9 +44,6 @@ public partial class ObligationCalculationEndpointsTests(ObligationCalculationAp
             .Sort(Builders<BsonDocument>.Sort.Ascending("version"))
             .ToListAsync(cancellationToken);
     }
-
-    private static BsonDocument Index(List<BsonDocument> indexes, string name) =>
-        Assert.Single(indexes, candidate => candidate["name"].AsString == name);
 
     // Generated calculation ids are pinned. The sample figures and source submission ids stay as stored.
     private static string StoredJson(BsonDocument document, string id)
@@ -69,10 +74,43 @@ public partial class ObligationCalculationEndpointsTests(ObligationCalculationAp
         return pinned;
     }
 
+    // The API body, with the generated id (and the id it replaces) pinned so the file stays stable.
+    private static string ResponseJson(string json, string id, string? supersedesId = null)
+    {
+        var node = JsonNode.Parse(json)!.AsObject();
+        node["id"] = id;
+        if (supersedesId is not null)
+        {
+            node["supersedesCalculationId"] = supersedesId;
+        }
+
+        return Readable(node);
+    }
+
+    // traceId is a different value on every request. The rest of the problem is the contract.
+    private static string ProblemJson(string json)
+    {
+        var node = JsonNode.Parse(json)!.AsObject();
+        if (node.ContainsKey("traceId"))
+        {
+            node["traceId"] = "trace-id";
+        }
+
+        return Readable(node);
+    }
+
+    private static string Readable(JsonNode node) => node.ToJsonString(IndentedJson) + "\n";
+
     private static JsonWriterSettings CanonicalJson { get; } = new()
     {
         OutputMode = JsonOutputMode.CanonicalExtendedJson,
         Indent = true,
         NewLineChars = "\n"
+    };
+
+    private static JsonSerializerOptions IndentedJson { get; } = new()
+    {
+        WriteIndented = true,
+        NewLine = "\n"
     };
 }

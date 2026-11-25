@@ -6,9 +6,9 @@ namespace WasteBatteriesObligationsBe.ObligationCalculation.Validators;
 
 // Shape of a calculation the service is asked to store. Whether a current version must already
 // exist is decided by the service, which reads that row once.
-public sealed class ObligationCalculationValidator : AbstractValidator<ObligationCalculationBase>
+public sealed class ObligationCalculationBaseValidator : AbstractValidator<ObligationCalculationBase>
 {
-    public ObligationCalculationValidator()
+    public ObligationCalculationBaseValidator()
     {
         ClassLevelCascadeMode = CascadeMode.Continue;
         RuleLevelCascadeMode = CascadeMode.Stop;
@@ -17,7 +17,8 @@ public sealed class ObligationCalculationValidator : AbstractValidator<Obligatio
             .Must(BeAnObjectId)
             .WithMessage(ObligationCalculationValidationMessages.SchemeOrgIdObjectId);
 
-        Required(RuleFor(content => content.SchemeName), ObligationCalculationValidationMessages.SchemeNameRequired);
+        // TEMPORARY: schemeName may be blank. CalculateAsync stores an empty name until
+        // Manage Account can supply it. A name is still accepted when the caller has one.
 
         RuleFor(content => content.CompliancePeriodYear)
             .InclusiveBetween(CalendarYear.Minimum, CalendarYear.Maximum)
@@ -39,18 +40,20 @@ public sealed class ObligationCalculationValidator : AbstractValidator<Obligatio
                     && content.Parameters is not null
                     && content.Parameters.WindowYears > 0
                     && CalendarYear.Contains(content.CompliancePeriodYear))
-                .WithMessage(ObligationCalculationValidationMessages.PlacedOnMarketRequired);
+                .WithMessage(content => ListItemValidation.PlacedOnMarket(content));
 
-            RuleFor(content => content)
-                .Must(EarlierYearsAreUnscaled)
+            RuleForEach(content => content.PlacedOnMarketByYear)
+                .Where(year => year is not null)
+                .Must(EarlierYearIsUnscaled)
                 .When(content => CalendarYear.Contains(content.CompliancePeriodYear))
-                .WithName("PlacedOnMarketByYear")
-                .WithMessage(ObligationCalculationValidationMessages.EarlierYearScaled);
+                .WithMessage(ObligationCalculationValidationMessages.EarlierYearScaled)
+                .ForPlacedYear();
 
             RuleForEach(content => content.PlacedOnMarketByYear)
                 .Where(year => year is null)
                 .Must(_ => false)
-                .WithMessage(ObligationCalculationValidationMessages.PlacedOnMarketYearRequired);
+                .WithMessage(ObligationCalculationValidationMessages.PlacedOnMarketYearRequired)
+                .ForPlacedYear();
 
             RuleForEach(content => content.PlacedOnMarketByYear)
                 .Where(year => year is not null)
@@ -128,41 +131,49 @@ public sealed class ObligationCalculationValidator : AbstractValidator<Obligatio
 
         year.RuleFor(item => item.Year)
             .InclusiveBetween(CalendarYear.Minimum, CalendarYear.Maximum)
-            .WithMessage(ObligationCalculationValidationMessages.YearRange);
+            .WithMessage(ObligationCalculationValidationMessages.YearRange)
+            .ForPlacedYear();
 
         Required(year.RuleFor(item => item.Tonnes), ObligationCalculationValidationMessages.TonnesFormat)
             .Matches(ObligationCalculationPatterns.TonnesPattern())
-            .WithMessage(ObligationCalculationValidationMessages.TonnesFormat);
+            .WithMessage(ObligationCalculationValidationMessages.TonnesFormat)
+            .ForPlacedYear();
 
         Required(year.RuleFor(item => item.AnnualisedTonnes), ObligationCalculationValidationMessages.AnnualisedTonnesFormat)
             .Matches(ObligationCalculationPatterns.TonnesPattern())
-            .WithMessage(ObligationCalculationValidationMessages.AnnualisedTonnesFormat);
+            .WithMessage(ObligationCalculationValidationMessages.AnnualisedTonnesFormat)
+            .ForPlacedYear();
 
         year.RuleFor(item => item.QuartersOfData)
             .InclusiveBetween(0, 4)
-            .WithMessage(ObligationCalculationValidationMessages.QuartersRange);
+            .WithMessage(ObligationCalculationValidationMessages.QuartersRange)
+            .ForPlacedYear();
 
         year.RuleFor(item => item)
             .Must(AnnualisedFlagMatches)
             .When(item => TonnesMatch(item.Tonnes) && TonnesMatch(item.AnnualisedTonnes))
             .WithName("IsAnnualisedEstimate")
-            .WithMessage(ObligationCalculationValidationMessages.AnnualisedEstimateMismatch);
+            .WithMessage(ObligationCalculationValidationMessages.AnnualisedEstimateMismatch)
+            .ForPlacedYear();
 
         year.RuleFor(item => item)
             .Must(MissingYearIsBlank)
             .When(item => item.QuartersOfData == 0 && TonnesMatch(item.Tonnes) && TonnesMatch(item.AnnualisedTonnes))
             .WithName("PlacedOnMarketByYear")
-            .WithMessage(ObligationCalculationValidationMessages.MissingYearBlank);
+            .WithMessage(ObligationCalculationValidationMessages.MissingYearBlank)
+            .ForPlacedYear();
 
         year.RuleFor(item => item.SourceSubmissionIds)
             .NotNull()
-            .WithMessage(ObligationCalculationValidationMessages.SourceSubmissionIdsRequired);
+            .WithMessage(ObligationCalculationValidationMessages.SourceSubmissionIdsRequired)
+            .ForPlacedYear();
 
         year.When(item => item.SourceSubmissionIds is not null, () =>
         {
             year.RuleForEach(item => item.SourceSubmissionIds)
                 .Must(BeAnObjectId)
-                .WithMessage(ObligationCalculationValidationMessages.SourceSubmissionIdObjectId);
+                .WithMessage(ObligationCalculationValidationMessages.SourceSubmissionIdObjectId)
+                .ForPlacedYear();
         });
     }
 
@@ -196,25 +207,18 @@ public sealed class ObligationCalculationValidator : AbstractValidator<Obligatio
     }
 
     // Earlier years are not scaled. The compliance year is the only one that can be annualised.
-    private static bool EarlierYearsAreUnscaled(ObligationCalculationBase calculation)
+    // A year whose tonnes are not yet 3 decimal places is left to the tonnes rules.
+    private static bool EarlierYearIsUnscaled(ObligationCalculationBase calculation, PlacedOnMarketYear year)
     {
-        foreach (var year in calculation.PlacedOnMarketByYear)
+        if (year.Year == calculation.CompliancePeriodYear
+            || !TonnesMatch(year.Tonnes)
+            || !TonnesMatch(year.AnnualisedTonnes))
         {
-            if (year is null
-                || year.Year == calculation.CompliancePeriodYear
-                || !TonnesMatch(year.Tonnes)
-                || !TonnesMatch(year.AnnualisedTonnes))
-            {
-                continue;
-            }
-
-            if (year.IsAnnualisedEstimate || !string.Equals(year.Tonnes, year.AnnualisedTonnes, StringComparison.Ordinal))
-            {
-                return false;
-            }
+            return true;
         }
 
-        return true;
+        return !year.IsAnnualisedEstimate
+            && string.Equals(year.Tonnes, year.AnnualisedTonnes, StringComparison.Ordinal);
     }
 
     // A missing year is stored as zero. It is not a zero return, which has quarters and counts in the average.

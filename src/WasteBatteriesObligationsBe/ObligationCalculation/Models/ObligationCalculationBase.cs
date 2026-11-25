@@ -13,6 +13,7 @@ public record ObligationCalculationBase
     public string SchemeOrgId { get; init; } = string.Empty;
 
     // Snapshot of the scheme name at calculation time.
+    // TEMPORARY: blank until the calculation calls Manage Account for the name.
     public string SchemeName { get; init; } = string.Empty;
 
     public int CompliancePeriodYear { get; init; }

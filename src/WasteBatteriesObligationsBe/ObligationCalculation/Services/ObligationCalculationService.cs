@@ -1,8 +1,6 @@
 using FluentValidation;
 using FluentValidation.Results;
-using WasteBatteriesObligationsBe.ObligationCalculation.Mapping;
 using WasteBatteriesObligationsBe.ObligationCalculation.Models;
-using WasteBatteriesObligationsBe.ObligationCalculation.Repositories;
 using WasteBatteriesObligationsBe.Utils.Logging;
 using WasteBatteriesObligationsBe.Utils.Mongo;
 using WasteBatteriesObligationsBe.Utils.Time;
@@ -18,16 +16,20 @@ public interface IObligationCalculationService
     Task<ObligationCalculationModel> AddVersionAsync(
         ObligationCalculationBase calculation,
         CancellationToken cancellationToken = default);
+
+    // Builds the obligation from the submissions and stores it.
+    // The first calculation for the scheme and year is version 1. A later call stores the next version.
+    Task<ObligationCalculationModel> CalculateAsync(
+        CalculationData calculation,
+        CancellationToken cancellationToken = default);
 }
 
 // Creates and new versions are in the Save partial.
+// The calculation from POM submissions is in the Calculate partial.
 // These helpers are shared by the writes.
 public partial class ObligationCalculationService(
-    IObligationCalculationRepository repository,
-    IUnitOfWork unitOfWork,
+    ObligationCalculationDependencies dependencies,
     ITimeProvider timeProvider,
-    IObligationCalculationMapper mapper,
-    IValidator<ObligationCalculationBase> validator,
     ILogger<ObligationCalculationService> logger) : IObligationCalculationService
 {
     private static ValidationFailure CalculationFailure(string message) =>
@@ -40,7 +42,7 @@ public partial class ObligationCalculationService(
     {
         try
         {
-            return await unitOfWork.ExecuteAsync(work, cancellationToken);
+            return await dependencies.UnitOfWork.ExecuteAsync(work, cancellationToken);
         }
         catch (Exception exception) when (exception is not ValidationException and not DuplicateKeyOnSaveException)
         {

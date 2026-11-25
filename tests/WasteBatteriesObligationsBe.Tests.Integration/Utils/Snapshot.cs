@@ -2,12 +2,13 @@ using System.Runtime.CompilerServices;
 
 namespace WasteBatteriesObligationsBe.Tests.Integration.Utils;
 
-// Compares a response or stored document with Data/Snapshots/{TestFile}.{Method}.verified.txt.
+// Compares a response or stored document with Data/Snapshots/{File}.{Method}.verified.txt.
+// The file part is the name after the last dot, so partial-class names stay short enough for Windows.
 // A mismatch writes the same name with a .received.txt suffix.
 internal static class Snapshot
 {
     // One file per test method. Pass name for a second snapshot in the same method:
-    // Data/Snapshots/{TestFile}.{Method}.{name}.verified.txt
+    // Data/Snapshots/{File}.{Method}.{name}.verified.txt
     public static void Match(
         string actual,
         string? name = null,
@@ -21,9 +22,9 @@ internal static class Snapshot
                 nameof(name));
         }
 
-        var snapshotName = name is null
-            ? $"{Path.GetFileNameWithoutExtension(sourceFile)}.{method}"
-            : $"{Path.GetFileNameWithoutExtension(sourceFile)}.{method}.{name}";
+        var file = Path.GetFileNameWithoutExtension(sourceFile);
+        var leaf = file.LastIndexOf('.') is var dot && dot >= 0 ? file[(dot + 1)..] : file;
+        var snapshotName = name is null ? $"{leaf}.{method}" : $"{leaf}.{method}.{name}";
         var directory = Path.Combine(ProjectDirectory(sourceFile), "Data", "Snapshots");
         var verifiedPath = Path.Combine(directory, $"{snapshotName}.verified.txt");
         var receivedPath = Path.Combine(directory, $"{snapshotName}.received.txt");

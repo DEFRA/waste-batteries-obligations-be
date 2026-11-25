@@ -1,0 +1,47 @@
+{
+  "id": "000000000000000000000002",
+  "schemaVersion": 1,
+  "version": 2,
+  "supersedesCalculationId": "000000000000000000000001",
+  "isCurrent": true,
+  "calculatedAtUtc": "2026-11-20T10:00:00.001Z",
+  "updatedAtUtc": null,
+  "schemeOrgId": "674a1b2c3d4e5f6789012346",
+  "schemeName": "Sample scheme",
+  "compliancePeriodYear": 2026,
+  "obligationTonnes": "4378.775",
+  "placedOnMarketByYear": [
+    {
+      "year": 2024,
+      "tonnes": "7374.143",
+      "quartersOfData": 4,
+      "annualisedTonnes": "7374.143"
+    },
+    {
+      "year": 2025,
+      "tonnes": "5464.851",
+      "quartersOfData": 4,
+      "annualisedTonnes": "5464.851"
+    },
+    {
+      "year": 2026,
+      "tonnes": "145.111",
+      "quartersOfData": 2,
+      "annualisedTonnes": "6009.969",
+      "isAnnualisedEstimate": true
+    }
+  ],
+  "parameters": {
+    "target": {
+      "type": "percentage",
+      "value": "45.00"
+    },
+    "windowYears": 3,
+    "denominatorRule": "yearsWithData"
+  },
+  "trigger": {
+    "type": "event",
+    "eventId": "evt-3535",
+    "correlationId": "corr-5596"
+  }
+}

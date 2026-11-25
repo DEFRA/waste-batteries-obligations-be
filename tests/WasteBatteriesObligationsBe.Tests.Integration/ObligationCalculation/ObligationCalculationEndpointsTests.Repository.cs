@@ -3,6 +3,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using WasteBatteriesObligationsBe.ObligationCalculation.Models;
 using WasteBatteriesObligationsBe.ObligationCalculation.Repositories;
+using WasteBatteriesObligationsBe.Tests.Integration.Utils;
 using WasteBatteriesObligationsBe.Utils.Mongo;
 
 namespace WasteBatteriesObligationsBe.Tests.Integration.ObligationCalculation;
@@ -19,22 +20,8 @@ public partial class ObligationCalculationEndpointsTests
         var indexes = await fixture.Calculations.Indexes.List(cancellationToken).ToListAsync(cancellationToken);
 
         // Assert
-        Assert.DoesNotContain(indexes, index => index.Contains("expireAfterSeconds"));
-
-        var version = Index(indexes, "schemeOrgId_1_compliancePeriodYear_1_version_1");
-        Assert.True(version["unique"].AsBoolean);
-        Assert.False(version.Contains("partialFilterExpression"));
-
-        var current = Index(indexes, "schemeOrgId_1_compliancePeriodYear_1");
-        Assert.True(current["unique"].AsBoolean);
-        Assert.True(current["partialFilterExpression"]["isCurrent"].AsBoolean);
-
-        var year = Index(indexes, "compliancePeriodYear_1");
-        Assert.False(year.Contains("unique"));
-        Assert.True(year["partialFilterExpression"]["isCurrent"].AsBoolean);
-
-        var supersedes = Index(indexes, "supersedesCalculationId_1");
-        Assert.True(supersedes["sparse"].AsBoolean);
+        var ordered = indexes.OrderBy(index => index["name"].AsString, StringComparer.Ordinal).ToList();
+        Snapshot.Match(new BsonArray(ordered).ToJson(CanonicalJson));
     }
 
     [Fact]
