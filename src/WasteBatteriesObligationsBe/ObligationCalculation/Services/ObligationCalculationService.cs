@@ -1,5 +1,7 @@
 using FluentValidation;
 using FluentValidation.Results;
+using Microsoft.Extensions.Options;
+using WasteBatteriesObligationsBe.Config;
 using WasteBatteriesObligationsBe.ObligationCalculation.Mapping;
 using WasteBatteriesObligationsBe.ObligationCalculation.Models;
 using WasteBatteriesObligationsBe.ObligationCalculation.Repositories;
@@ -18,9 +20,16 @@ public interface IObligationCalculationService
     Task<ObligationCalculationModel> AddVersionAsync(
         ObligationCalculationBase calculation,
         CancellationToken cancellationToken = default);
+
+    // Builds the obligation from the submissions and stores it.
+    // The first calculation for the scheme and year is version 1. A later call stores the next version.
+    Task<ObligationCalculationModel> CalculateAsync(
+        CalculationData calculation,
+        CancellationToken cancellationToken = default);
 }
 
 // Creates and new versions are in the Save partial.
+// The calculation from POM submissions is in the Calculate partial.
 // These helpers are shared by the writes.
 public partial class ObligationCalculationService(
     IObligationCalculationRepository repository,
@@ -28,6 +37,8 @@ public partial class ObligationCalculationService(
     ITimeProvider timeProvider,
     IObligationCalculationMapper mapper,
     IValidator<ObligationCalculationBase> validator,
+    IValidator<CalculationData> calculationDataValidator,
+    IOptions<ObligationCalculationConfig> calculationOptions,
     ILogger<ObligationCalculationService> logger) : IObligationCalculationService
 {
     private static ValidationFailure CalculationFailure(string message) =>

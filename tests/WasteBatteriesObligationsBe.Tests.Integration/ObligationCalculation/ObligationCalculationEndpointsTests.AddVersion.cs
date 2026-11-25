@@ -1,13 +1,12 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using WasteBatteriesObligationsBe.ObligationCalculation.Endpoints;
 using WasteBatteriesObligationsBe.ObligationCalculation.Models;
 using WasteBatteriesObligationsBe.ObligationCalculation.Repositories;
-using WasteBatteriesObligationsBe.ObligationCalculation.Validators;
 using WasteBatteriesObligationsBe.Tests.Integration.Utils;
 
 namespace WasteBatteriesObligationsBe.Tests.Integration.ObligationCalculation;
@@ -26,7 +25,8 @@ public partial class ObligationCalculationEndpointsTests
 
         // Act
         var response = await client.PatchAsync(path, null, cancellationToken);
-        var added = await response.Content.ReadFromJsonAsync<ObligationCalculationModel>(JsonOptions, cancellationToken);
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
+        var added = JsonSerializer.Deserialize<ObligationCalculationModel>(json, JsonOptions);
         var repository = fixture.Services.GetRequiredService<IObligationCalculationRepository>();
         var history = await repository.FindBySchemeYearAsync(VersionSchemeOrgId, CompliancePeriodYear, cancellationToken);
         var current = await repository.FindCurrentAsync(VersionSchemeOrgId, CompliancePeriodYear, cancellationToken);
@@ -48,6 +48,7 @@ public partial class ObligationCalculationEndpointsTests
             log.Message);
 
         Assert.Equal(2, documents.Count);
+        Snapshot.Match(ResponseJson(json, PinnedReplacementId, PinnedCalculationId), "response");
         Snapshot.Match(StoredPair(documents[0], documents[1]));
     }
 
@@ -64,16 +65,13 @@ public partial class ObligationCalculationEndpointsTests
             PathFor(schemeOrgId),
             null,
             cancellationToken);
-        var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(cancellationToken);
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
         var stored = await Stored(schemeOrgId, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.NotNull(problem);
-        Assert.Contains(
-            problem.Errors["ObligationCalculation"],
-            message => message == ObligationCalculationValidationMessages.CurrentCalculationMissing);
         Assert.Empty(stored);
+        Snapshot.Match(ProblemJson(json));
     }
 
     [Fact]

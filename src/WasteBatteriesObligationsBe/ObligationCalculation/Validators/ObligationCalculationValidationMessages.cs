@@ -7,8 +7,6 @@ public static class ObligationCalculationValidationMessages
 
     public const string SchemeOrgIdObjectId = "schemeOrgId must be an ObjectId.";
 
-    public const string SchemeNameRequired = "schemeName is required.";
-
     public const string CompliancePeriodYearRange = "compliancePeriodYear must be a calendar year.";
 
     public const string ObligationTonnesFormat = "obligationTonnes must have exactly 3 decimal places.";

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using System.Net;
@@ -6,7 +5,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using WasteBatteriesObligationsBe.ObligationCalculation.Endpoints;
 using WasteBatteriesObligationsBe.ObligationCalculation.Models;
-using WasteBatteriesObligationsBe.ObligationCalculation.Validators;
 using WasteBatteriesObligationsBe.Tests.Integration.Utils;
 
 namespace WasteBatteriesObligationsBe.Tests.Integration.ObligationCalculation;
@@ -35,13 +33,6 @@ public partial class ObligationCalculationEndpointsTests
         Assert.Equal($"{ObligationCalculationEndpoints.RoutePrefix}/{created.Id}", response.Headers.Location?.OriginalString);
 
         var document = Assert.Single(stored);
-
-        using var body = JsonDocument.Parse(json);
-        foreach (var year in body.RootElement.GetProperty("placedOnMarketByYear").EnumerateArray())
-        {
-            Assert.False(year.TryGetProperty("sourceSubmissionIds", out _));
-        }
-
         var log = Assert.Single(fixture.Logger.Entries, entry => entry.Message.Contains(created.Id, StringComparison.Ordinal));
         Assert.Equal(LogLevel.Information, log.Level);
         Assert.Equal(4, log.EventId.Id);
@@ -49,7 +40,8 @@ public partial class ObligationCalculationEndpointsTests
             $"Stored obligation calculation {created.Id} version 1 for scheme {CreateSchemeOrgId} compliance year {CompliancePeriodYear}",
             log.Message);
 
-        Snapshot.Match(StoredJson(document, "000000000000000000000001"));
+        Snapshot.Match(ResponseJson(json, PinnedCalculationId), "response");
+        Snapshot.Match(StoredJson(document, PinnedCalculationId));
     }
 
     [Fact]
@@ -77,25 +69,20 @@ public partial class ObligationCalculationEndpointsTests
     {
         // Arrange
         var cancellationToken = TestContext.Current.CancellationToken;
-        var schemeOrgId = ObjectId.GenerateNewId().ToString();
-        var path = PathFor(schemeOrgId);
+        var path = PathFor(ConflictSchemeOrgId);
         using var client = fixture.CreateClient();
         await client.PostAsync(path, null, cancellationToken);
-        var before = await Stored(schemeOrgId, cancellationToken);
 
         // Act
         var response = await client.PostAsync(path, null, cancellationToken);
-        var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(cancellationToken);
-        var after = await Stored(schemeOrgId, cancellationToken);
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
+        var after = await Stored(ConflictSchemeOrgId, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.NotNull(problem);
-        Assert.Contains(
-            problem.Errors["ObligationCalculation"],
-            message => message == ObligationCalculationValidationMessages.CurrentCalculationExists);
-        Assert.Equal(before[0]["obligationTonnes"].AsDecimal128.ToString(), after[0]["obligationTonnes"].AsDecimal128.ToString());
-        Assert.Single(after);
+        var document = Assert.Single(after);
+        Snapshot.Match(ProblemJson(json), "problem");
+        Snapshot.Match(StoredJson(document, PinnedCalculationId), "stored");
     }
 
     [Fact]

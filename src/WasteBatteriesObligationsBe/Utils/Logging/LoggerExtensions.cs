@@ -67,6 +67,14 @@ internal static partial class LoggerExtensions
         string validationErrors);
 
     [LoggerMessage(
+        EventId = 8,
+        Level = LogLevel.Error,
+        Message = "Obligation calculation input is invalid: {ValidationErrors}")]
+    public static partial void ObligationCalculationInputInvalid(
+        this ILogger logger,
+        string validationErrors);
+
+    [LoggerMessage(
         EventId = 2000,
         Level = LogLevel.Information,
         Message = "Searching for {Name}, found {Result}")]

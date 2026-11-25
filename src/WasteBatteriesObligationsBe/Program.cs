@@ -70,7 +70,7 @@ static void ConfigureServices(WebApplicationBuilder builder)
 
     services.AddExampleServices();
     services.AddExampleDataServices();
-    services.AddObligationCalculationServices();
+    services.AddObligationCalculationServices(configuration);
 }
 
 [ExcludeFromCodeCoverage]

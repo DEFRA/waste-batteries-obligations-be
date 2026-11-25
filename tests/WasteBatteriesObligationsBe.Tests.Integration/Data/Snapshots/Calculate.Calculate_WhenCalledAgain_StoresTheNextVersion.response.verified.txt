@@ -1,0 +1,46 @@
+{
+  "id": "000000000000000000000002",
+  "schemaVersion": 1,
+  "version": 2,
+  "supersedesCalculationId": "000000000000000000000001",
+  "isCurrent": true,
+  "calculatedAtUtc": "2026-11-20T10:00:00.001Z",
+  "updatedAtUtc": null,
+  "schemeOrgId": "674a1b2c3d4e5f6789012348",
+  "schemeName": "",
+  "compliancePeriodYear": 2026,
+  "obligationTonnes": "3600.000",
+  "placedOnMarketByYear": [
+    {
+      "year": 2024,
+      "tonnes": "0.000",
+      "quartersOfData": 0,
+      "annualisedTonnes": "0.000"
+    },
+    {
+      "year": 2025,
+      "tonnes": "0.000",
+      "quartersOfData": 0,
+      "annualisedTonnes": "0.000"
+    },
+    {
+      "year": 2026,
+      "tonnes": "8000.000",
+      "quartersOfData": 4,
+      "annualisedTonnes": "8000.000"
+    }
+  ],
+  "parameters": {
+    "target": {
+      "type": "percentage",
+      "value": "45.00"
+    },
+    "windowYears": 3,
+    "denominatorRule": "yearsWithData"
+  },
+  "trigger": {
+    "type": "manual",
+    "actor": "regulator.user@example.com",
+    "reason": "Check the calculation"
+  }
+}

@@ -4,9 +4,22 @@ using WasteBatteriesObligationsBe.ObligationCalculation.Validators;
 
 namespace WasteBatteriesObligationsBe.Tests.Unit.ObligationCalculation.Validators;
 
-public class ObligationCalculationValidatorTests
+public class ObligationCalculationBaseValidatorTests
 {
-    private readonly ObligationCalculationValidator _validator = new();
+    private readonly ObligationCalculationBaseValidator _validator = new();
+
+    [Fact]
+    public async Task ValidateAsync_WhenSchemeNameIsBlank_ReturnsValid()
+    {
+        // Arrange
+        var content = Content() with { SchemeName = string.Empty };
+
+        // Act
+        var result = await _validator.ValidateAsync(content, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.True(result.IsValid);
+    }
 
     [Fact]
     public async Task ValidateAsync_WhenCalculationIsComplete_ReturnsValid()
@@ -32,7 +45,11 @@ public class ObligationCalculationValidatorTests
         var result = await _validator.ValidateAsync(content, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Contains(result.Errors, error => error.ErrorMessage == ObligationCalculationValidationMessages.PlacedOnMarketRequired);
+        Assert.Contains(result.Errors, error => error.ErrorMessage ==
+            "placedOnMarketByYear must contain one entry for each year in the window. "
+            + "Expected 2024, 2025, 2026. "
+            + "Entries: [0] year 2025, [1] year 2026 "
+            + $"(schemeOrgId {content.SchemeOrgId}, compliancePeriodYear 2026).");
     }
 
     [Fact]
@@ -46,7 +63,8 @@ public class ObligationCalculationValidatorTests
         var result = await _validator.ValidateAsync(content, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Contains(result.Errors, error => error.ErrorMessage == ObligationCalculationValidationMessages.AnnualisedEstimateMismatch);
+        Assert.Contains(result.Errors, error => error.ErrorMessage ==
+            $"{Year(content, 2)}: {ObligationCalculationValidationMessages.AnnualisedEstimateMismatch}");
     }
 
     [Fact]
@@ -60,7 +78,27 @@ public class ObligationCalculationValidatorTests
         var result = await _validator.ValidateAsync(content, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Contains(result.Errors, error => error.ErrorMessage == ObligationCalculationValidationMessages.PlacedOnMarketRequired);
+        Assert.Contains(result.Errors, error => error.ErrorMessage ==
+            "placedOnMarketByYear must contain one entry for each year in the window. "
+            + "Expected 2024, 2025, 2026. "
+            + "Entries: [0] year 2024, [1] year 2025, [2] year 2026, [3] year 2026 "
+            + $"(schemeOrgId {content.SchemeOrgId}, compliancePeriodYear 2026).");
+    }
+
+    [Fact]
+    public async Task ValidateAsync_WhenAYearIsNull_RejectsThatIndex()
+    {
+        // Arrange
+        var content = Content();
+        content.PlacedOnMarketByYear[1] = null!;
+
+        // Act
+        var result = await _validator.ValidateAsync(content, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Contains(result.Errors, error => error.ErrorMessage ==
+            $"placedOnMarketByYear[1] (schemeOrgId {content.SchemeOrgId}, compliancePeriodYear 2026): "
+            + ObligationCalculationValidationMessages.PlacedOnMarketYearRequired);
     }
 
     [Fact]
@@ -74,7 +112,8 @@ public class ObligationCalculationValidatorTests
         var result = await _validator.ValidateAsync(content, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Contains(result.Errors, error => error.ErrorMessage == ObligationCalculationValidationMessages.MissingYearBlank);
+        Assert.Contains(result.Errors, error => error.ErrorMessage ==
+            $"{Year(content, 0)}: {ObligationCalculationValidationMessages.MissingYearBlank}");
     }
 
     [Fact]
@@ -91,7 +130,26 @@ public class ObligationCalculationValidatorTests
         var result = await _validator.ValidateAsync(content, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Contains(result.Errors, error => error.ErrorMessage == ObligationCalculationValidationMessages.MissingYearBlank);
+        Assert.Contains(result.Errors, error => error.ErrorMessage ==
+            $"{Year(content, 0)}: {ObligationCalculationValidationMessages.MissingYearBlank}");
+    }
+
+    [Fact]
+    public async Task ValidateAsync_WhenASourceSubmissionIdIsNotAnObjectId_RejectsThatId()
+    {
+        // Arrange
+        var content = Content();
+        content.PlacedOnMarketByYear[1] = content.PlacedOnMarketByYear[1] with
+        {
+            SourceSubmissionIds = [ObjectId.GenerateNewId().ToString(), "not-an-id"]
+        };
+
+        // Act
+        var result = await _validator.ValidateAsync(content, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Contains(result.Errors, error => error.ErrorMessage ==
+            $"{Year(content, 1)}, sourceSubmissionIds[1]: {ObligationCalculationValidationMessages.SourceSubmissionIdObjectId}");
     }
 
     [Fact]
@@ -109,7 +167,8 @@ public class ObligationCalculationValidatorTests
         var result = await _validator.ValidateAsync(content, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Contains(result.Errors, error => error.ErrorMessage == ObligationCalculationValidationMessages.EarlierYearScaled);
+        Assert.Contains(result.Errors, error => error.ErrorMessage ==
+            $"{Year(content, 1)}: {ObligationCalculationValidationMessages.EarlierYearScaled}");
     }
 
     [Fact]
@@ -147,6 +206,9 @@ public class ObligationCalculationValidatorTests
         Assert.Contains(result.Errors, error => error.ErrorMessage == ObligationCalculationValidationMessages.SchemeOrgIdRequired);
         Assert.Contains(result.Errors, error => error.ErrorMessage == ObligationCalculationValidationMessages.ObligationTonnesFormat);
     }
+
+    private static string Year(ObligationCalculationBase content, int index) =>
+        $"placedOnMarketByYear[{index}] (schemeOrgId {content.SchemeOrgId}, compliancePeriodYear {content.CompliancePeriodYear}, year {content.PlacedOnMarketByYear[index].Year})";
 
     private static ObligationCalculationBase Content() => new()
     {

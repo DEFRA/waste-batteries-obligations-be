@@ -34,7 +34,8 @@ public class ObligationCalculationEndpointsTests
         Assert.Equal(
             [
                 "PATCH /obligation-calculations/",
-                "POST /obligation-calculations/"
+                "POST /obligation-calculations/",
+                "POST /obligation-calculations/calculate"
             ],
             routes);
     }
