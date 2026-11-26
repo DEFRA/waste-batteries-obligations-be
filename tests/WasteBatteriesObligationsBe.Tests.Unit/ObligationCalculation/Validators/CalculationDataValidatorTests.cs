@@ -193,7 +193,7 @@ public class CalculationDataValidatorTests
     private static PomSubmissionForCalculation Submission(int year, string? schemeOrgId = null) => new()
     {
         Id = ObjectId.GenerateNewId().ToString(),
-        SchemeOrgId = schemeOrgId ?? SchemeOrgId,
+        SchemeOrgId = schemeOrgId ?? s_schemeOrgId,
         CompliancePeriodYear = year,
         CompliancePeriodQuarter = PomSubmissionForCalculation.Quarter1,
         Tonnes = ["1.000"]
@@ -206,5 +206,5 @@ public class CalculationDataValidatorTests
         DenominatorRule = ObligationParameters.YearsWithData
     };
 
-    private static readonly string SchemeOrgId = ObjectId.GenerateNewId().ToString();
+    private static readonly string s_schemeOrgId = ObjectId.GenerateNewId().ToString();
 }

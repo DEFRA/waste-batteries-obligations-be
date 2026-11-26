@@ -53,6 +53,8 @@ public class ExceptionLoggingHandlerTests
             // Production has no Jwt section, and Program reads it before test configuration is applied.
             builder.UseSetting("Jwt:MetadataAddress", "https://idp.test/.well-known/openid-configuration");
             builder.UseSetting("Jwt:Audience", "test-audience");
+            // Production does not load the local submissions address.
+            builder.UseSetting("SubmitApi:BaseUrl", "https://waste-batteries-submit-backend.test");
         });
         using var client = factory.CreateAuthenticatedClient();
 

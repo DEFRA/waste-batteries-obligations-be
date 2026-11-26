@@ -21,12 +21,12 @@ public partial class ObligationCalculationEndpointsTests
         var path = PathFor(VersionSchemeOrgId);
         using var client = fixture.CreateClient();
         var created = await client.PostAsJsonAsync(path, new { }, cancellationToken);
-        var first = await created.Content.ReadFromJsonAsync<ObligationCalculationModel>(JsonOptions, cancellationToken);
+        var first = await created.Content.ReadFromJsonAsync<ObligationCalculationModel>(s_jsonOptions, cancellationToken);
 
         // Act
         var response = await client.PatchAsync(path, null, cancellationToken);
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
-        var added = JsonSerializer.Deserialize<ObligationCalculationModel>(json, JsonOptions);
+        var added = JsonSerializer.Deserialize<ObligationCalculationModel>(json, s_jsonOptions);
         var repository = fixture.Services.GetRequiredService<IObligationCalculationRepository>();
         var history = await repository.FindBySchemeYearAsync(VersionSchemeOrgId, CompliancePeriodYear, cancellationToken);
         var current = await repository.FindCurrentAsync(VersionSchemeOrgId, CompliancePeriodYear, cancellationToken);

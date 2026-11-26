@@ -6,6 +6,7 @@ using WasteBatteriesObligationsBe.Example;
 using WasteBatteriesObligationsBe.ExampleData;
 using WasteBatteriesObligationsBe.ObligationCalculation;
 using WasteBatteriesObligationsBe.OpenApi;
+using WasteBatteriesObligationsBe.SubmitApi;
 using WasteBatteriesObligationsBe.Utils;
 using WasteBatteriesObligationsBe.Utils.Health;
 using WasteBatteriesObligationsBe.Utils.Http;
@@ -71,6 +72,7 @@ static void ConfigureServices(WebApplicationBuilder builder)
     services.AddExampleServices();
     services.AddExampleDataServices();
     services.AddObligationCalculationServices(configuration);
+    services.AddSubmitApi(configuration, builder.Environment);
 }
 
 [ExcludeFromCodeCoverage]

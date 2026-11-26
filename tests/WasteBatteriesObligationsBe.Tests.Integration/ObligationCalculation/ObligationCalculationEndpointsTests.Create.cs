@@ -11,7 +11,7 @@ namespace WasteBatteriesObligationsBe.Tests.Integration.ObligationCalculation;
 
 public partial class ObligationCalculationEndpointsTests
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
 
     [Fact]
     public async Task Create_WhenCalculationIsValid_SavesItAndLogsIt()
@@ -24,7 +24,7 @@ public partial class ObligationCalculationEndpointsTests
         // Act
         var response = await client.PostAsync(path, null, cancellationToken);
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
-        var created = JsonSerializer.Deserialize<ObligationCalculationModel>(json, JsonOptions);
+        var created = JsonSerializer.Deserialize<ObligationCalculationModel>(json, s_jsonOptions);
         var stored = await Stored(CreateSchemeOrgId, cancellationToken);
 
         // Assert
@@ -53,7 +53,7 @@ public partial class ObligationCalculationEndpointsTests
 
         // Act
         var response = await client.PostAsync(ObligationCalculationEndpoints.RoutePrefix, null, cancellationToken);
-        var created = await response.Content.ReadFromJsonAsync<ObligationCalculationModel>(JsonOptions, cancellationToken);
+        var created = await response.Content.ReadFromJsonAsync<ObligationCalculationModel>(s_jsonOptions, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
