@@ -88,6 +88,8 @@ services:
       Jwt__Audience: 63983fc2-cfff-45bb-8ec2-959e21062b9a
       Jwt__RequireHttpsMetadata: false
       Mongo__DatabaseUri: mongodb://mongodb:27017/?directConnection=true
+      # The submissions API is not in this compose file. The URL only has to be absolute so the process can start.
+      SubmitApi__BaseUrl: http://host.docker.internal:3001
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     networks:

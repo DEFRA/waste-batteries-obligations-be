@@ -55,6 +55,24 @@ public class CalculationDataValidatorTests
     }
 
     [Fact]
+    public async Task ValidateAsync_WhenANullSubmissionSitsBetweenTwoSchemes_SkipsTheNull()
+    {
+        // Arrange
+        var first = Submission(2026);
+        var second = Submission(2026, schemeOrgId: ObjectId.GenerateNewId().ToString());
+        var request = Data(first, null!, second);
+
+        // Act
+        var result = await _validator.ValidateAsync(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Contains(result.Errors, error => error.ErrorMessage ==
+            "All submissions must be for the same scheme. "
+            + $"submissions[0] (id {first.Id}) has schemeOrgId {first.SchemeOrgId}; "
+            + $"submissions[2] (id {second.Id}) has schemeOrgId {second.SchemeOrgId}.");
+    }
+
+    [Fact]
     public async Task ValidateAsync_WhenAYearIsOutsideTheWindow_RejectsTheSubmission()
     {
         // Arrange
@@ -112,6 +130,34 @@ public class CalculationDataValidatorTests
         // Assert
         Assert.Contains(result.Errors, error => error.ErrorMessage ==
             $"Each submission can be included once. id {submission.Id} at submissions[0], submissions[1].");
+    }
+
+    [Fact]
+    public async Task ValidateAsync_WhenANullSubmissionSitsBetweenARepeatedId_SkipsTheNull()
+    {
+        // Arrange
+        var submission = Submission(2026);
+        var request = Data(submission, null!, submission);
+
+        // Act
+        var result = await _validator.ValidateAsync(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Contains(result.Errors, error => error.ErrorMessage ==
+            $"Each submission can be included once. id {submission.Id} at submissions[0], submissions[2].");
+    }
+
+    [Fact]
+    public async Task ValidateAsync_WhenTheWindowIsEmpty_RejectsTheComplianceYear()
+    {
+        // Arrange
+        var validator = new CalculationDataValidator(Options.Create(Config(windowYears: 0)));
+
+        // Act
+        var result = await validator.ValidateAsync(Data(Submission(2026)), TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Contains(result.Errors, error => error.ErrorMessage == CalculationDataValidationMessages.WindowOutsideCalendar);
     }
 
     [Fact]

@@ -52,6 +52,47 @@ public class SubmitApiConfigTests
         Assert.Contains("host environment is Development", error, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void ValidationError_WhenTheModeIsUnknown_NamesTheMode()
+    {
+        var config = Aws();
+        config.Mode = "Local";
+
+        var error = config.ValidationError("Production", "dev");
+
+        Assert.Contains("Mode", error, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidationError_WhenTheAudienceIsMissing_NamesTheAudience()
+    {
+        var config = Aws();
+        config.Audience = " ";
+
+        var error = config.ValidationError("Production", "dev");
+
+        Assert.Contains("Audience", error, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidationError_WhenDevelopmentIsUsedInCdpProd_NamesTheEnvironment()
+    {
+        var error = Development().ValidationError("Development", " prod ");
+
+        Assert.Contains("ENVIRONMENT is prod", error, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidationError_WhenTheDevTokenIsMissing_NamesTheToken()
+    {
+        var config = Development();
+        config.DevToken = " ";
+
+        var error = config.ValidationError("Development", "dev");
+
+        Assert.Contains("DevToken", error, StringComparison.Ordinal);
+    }
+
     private static SubmitApiConfig Aws() => new()
     {
         Mode = SubmitApiConfig.AwsMode,

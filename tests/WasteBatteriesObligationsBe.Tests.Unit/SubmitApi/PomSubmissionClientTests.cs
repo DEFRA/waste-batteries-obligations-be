@@ -113,6 +113,22 @@ public class PomSubmissionClientTests
     }
 
     [Fact]
+    public async Task ListAsync_WhenTheBodyHasNoBytes_Throws()
+    {
+        using var harness = Client(
+            _ => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent([])
+            },
+            "service-token");
+
+        var exception = await Assert.ThrowsAsync<SubmitApiException>(() =>
+            harness.Client.ListAsync(new PomSubmissionQuery(), TestContext.Current.CancellationToken));
+
+        Assert.Contains("empty body", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task ListAsync_WhenTheBodyIsEmpty_Throws()
     {
         using var harness = Client(

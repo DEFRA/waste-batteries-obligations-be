@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -37,7 +38,8 @@ public partial class ObligationCalculationServiceTests
         CapturingLogger<ObligationCalculationService> logger,
         IUnitOfWork? unitOfWork = null,
         ITimeProvider? time = null,
-        ObligationCalculationConfig? config = null)
+        ObligationCalculationConfig? config = null,
+        IValidator<CalculationData>? calculationDataValidator = null)
     {
         var options = Options.Create(config ?? CalculationConfig());
         return new(
@@ -46,7 +48,7 @@ public partial class ObligationCalculationServiceTests
                 unitOfWork ?? Substitute.For<IUnitOfWork>(),
                 new ObligationCalculationMapper(),
                 new ObligationCalculationBaseValidator(),
-                new CalculationDataValidator(options),
+                calculationDataValidator ?? new CalculationDataValidator(options),
                 options),
             time ?? new FixedTime(s_utc),
             logger);

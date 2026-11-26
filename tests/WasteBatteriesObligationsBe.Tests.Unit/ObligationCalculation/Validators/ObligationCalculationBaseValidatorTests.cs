@@ -1,3 +1,4 @@
+using FluentValidation;
 using MongoDB.Bson;
 using WasteBatteriesObligationsBe.ObligationCalculation.Models;
 using WasteBatteriesObligationsBe.ObligationCalculation.Validators;
@@ -205,6 +206,22 @@ public class ObligationCalculationBaseValidatorTests
         // Assert
         Assert.Contains(result.Errors, error => error.ErrorMessage == ObligationCalculationValidationMessages.SchemeOrgIdRequired);
         Assert.Contains(result.Errors, error => error.ErrorMessage == ObligationCalculationValidationMessages.ObligationTonnesFormat);
+    }
+
+    [Fact]
+    public async Task ForPlacedYear_WhenTheYearIsNotInsideACalculation_Throws()
+    {
+        // Arrange
+        var validator = new InlineValidator<PlacedOnMarketYear>();
+        validator.RuleFor(year => year.Tonnes).NotEmpty().ForPlacedYear();
+
+        // Act
+        Task<FluentValidation.Results.ValidationResult> Act() =>
+            validator.ValidateAsync(new PlacedOnMarketYear { Tonnes = string.Empty }, TestContext.Current.CancellationToken);
+
+        // Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(Act);
+        Assert.Contains("placed-on-market year", exception.Message, StringComparison.Ordinal);
     }
 
     private static string Year(ObligationCalculationBase content, int index) =>

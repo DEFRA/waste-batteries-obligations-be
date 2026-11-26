@@ -1,8 +1,4 @@
-using Amazon;
-using Amazon.SecurityToken;
-using Amazon.SecurityToken.Model;
 using Microsoft.Extensions.Options;
-using System.Diagnostics.CodeAnalysis;
 using WasteBatteriesObligationsBe.Config;
 using WasteBatteriesObligationsBe.Utils.Time;
 
@@ -93,43 +89,4 @@ internal sealed class CachingWebIdentityTokenSource(
     }
 
     private bool IsFresh() => _token is not null && time.UtcNow < _refreshAtUtc;
-}
-
-[ExcludeFromCodeCoverage]
-internal sealed class StsWebIdentityTokenSource : IWebIdentityTokenIssuer, IDisposable
-{
-    private readonly IAmazonSecurityTokenService _sts;
-    private readonly IOptions<SubmitApiConfig> _options;
-
-    public StsWebIdentityTokenSource(IOptions<SubmitApiConfig> options)
-    {
-        _options = options;
-        // GetWebIdentityToken is not on the global STS endpoint. CDP runs in eu-west-2.
-        _sts = new AmazonSecurityTokenServiceClient(new AmazonSecurityTokenServiceConfig
-        {
-            RegionEndpoint = RegionEndpoint.EUWest2
-        });
-    }
-
-    public async Task<IssuedWebIdentityToken> IssueAsync(CancellationToken cancellationToken)
-    {
-        var response = await _sts.GetWebIdentityTokenAsync(new GetWebIdentityTokenRequest
-        {
-            Audience = [_options.Value.Audience],
-            SigningAlgorithm = "RS256",
-            DurationSeconds = _options.Value.TokenLifetimeSeconds
-        }, cancellationToken);
-
-        if (string.IsNullOrWhiteSpace(response.WebIdentityToken))
-        {
-            throw new InvalidOperationException("STS returned an empty web identity token.");
-        }
-
-        var expires = response.Expiration.Kind == DateTimeKind.Utc
-            ? response.Expiration
-            : response.Expiration.ToUniversalTime();
-        return new IssuedWebIdentityToken(response.WebIdentityToken, expires);
-    }
-
-    public void Dispose() => _sts.Dispose();
 }

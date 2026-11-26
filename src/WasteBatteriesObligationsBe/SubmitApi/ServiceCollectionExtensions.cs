@@ -24,6 +24,7 @@ public static class ServiceCollectionExtensions
         {
             var options = sp.GetRequiredService<IOptions<SubmitApiConfig>>();
             var time = sp.GetRequiredService<ITimeProvider>();
+            // Development sends the shared local token. Every other host asks STS.
             IWebIdentityTokenIssuer issuer = options.Value.IsDevelopment
                 ? new DevelopmentWebIdentityTokenSource(options, time)
                 : new StsWebIdentityTokenSource(options);
@@ -50,8 +51,6 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    private static string? CdpEnvironmentName() => Environment.GetEnvironmentVariable("ENVIRONMENT");
-
     [ExcludeFromCodeCoverage]
     private sealed class SubmitApiConfigValidator(IHostEnvironment environment) : IValidateOptions<SubmitApiConfig>
     {
@@ -60,5 +59,7 @@ public static class ServiceCollectionExtensions
             var error = options.ValidationError(environment.EnvironmentName, CdpEnvironmentName());
             return error is null ? ValidateOptionsResult.Success : ValidateOptionsResult.Fail(error);
         }
+
+        private static string? CdpEnvironmentName() => Environment.GetEnvironmentVariable("ENVIRONMENT");
     }
 }
