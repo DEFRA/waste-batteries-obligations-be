@@ -313,6 +313,26 @@ public partial class ObligationCalculationServiceTests
         Assert.Equal("4000.000", calculation.PlacedOnMarketByYear[2].AnnualisedTonnes);
     }
 
+    [Fact]
+    public async Task CalculateAsync_WhenValidationAcceptsNoYearWithASubmission_Throws()
+    {
+        // Arrange
+        var service = Service(
+            Substitute.For<IObligationCalculationRepository>(),
+            new CapturingLogger<ObligationCalculationService>(),
+            calculationDataValidator: new AcceptingCalculationDataValidator());
+        var request = Data(2026, [Submission(ObjectId.GenerateNewId().ToString(), 2020, "Quarter 1", "1.000")]);
+
+        // Act
+        Task<ObligationCalculationModel> Act() => service.CalculateAsync(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(Act);
+        Assert.Contains("year with a submission", exception.Message, StringComparison.Ordinal);
+    }
+
+    private sealed class AcceptingCalculationDataValidator : AbstractValidator<CalculationData>;
+
     private static ObligationCalculationService ReadyService()
     {
         var repository = Substitute.For<IObligationCalculationRepository>();

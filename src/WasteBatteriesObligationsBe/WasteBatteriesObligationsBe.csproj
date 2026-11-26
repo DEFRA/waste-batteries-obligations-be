@@ -19,12 +19,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.SecurityToken" />
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="Elastic.CommonSchema.Serilog" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Elastic.Serilog.Enrichers.Web" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.AspNetCore.HeaderPropagation" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
     <PackageReference Include="MongoDB.Driver" />
     <PackageReference Include="MongoDB.Driver.Authentication.AWS" />
     <PackageReference Include="Serilog.AspNetCore" />

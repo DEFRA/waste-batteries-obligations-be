@@ -78,6 +78,8 @@ public partial class ProblemDetailsTraceIdTests
             builder.UseEnvironment(Environments.Production);
             builder.UseSetting("Jwt:MetadataAddress", "https://idp.test/.well-known/openid-configuration");
             builder.UseSetting("Jwt:Audience", "test-audience");
+            // Production does not load the local submissions address.
+            builder.UseSetting("SubmitApi:BaseUrl", "https://waste-batteries-submit-backend.test");
             builder.ConfigureTestAuthentication();
             builder.ConfigureServices(services =>
             {

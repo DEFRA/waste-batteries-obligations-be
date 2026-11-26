@@ -26,10 +26,12 @@ public static class ServiceCollectionExtensions
     {
         services.AddTransient<ProxyHttpMessageHandler>();
 
-        // TEMPORARY: When the first real typed client is registered, add
-        // Microsoft.Extensions.Http.Resilience on that client, as waste-obligations
-        // does for its downstream clients. Register it with AddHttpClientWithTracing
-        // or AddHttpClientWithTracingAndProxy. Do not add resilience before a client exists.
+        // The submissions client is registered in AddSubmitApi. It calls another CDP
+        // service directly and sets its own bearer token, so it does not use this proxy.
+        // For a later client that calls a host outside CDP, add
+        // Microsoft.Extensions.Http.Resilience on that client, as waste-obligations does
+        // for its downstream clients. Register it with AddHttpClientWithTracing or
+        // AddHttpClientWithTracingAndProxy. Do not add resilience before a client exists.
 
         return services;
     }

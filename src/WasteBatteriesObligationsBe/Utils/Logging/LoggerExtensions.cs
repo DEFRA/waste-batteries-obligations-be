@@ -75,6 +75,15 @@ internal static partial class LoggerExtensions
         string validationErrors);
 
     [LoggerMessage(
+        EventId = 9,
+        Level = LogLevel.Warning,
+        Message = "Submissions API returned {StatusCode} for {Path}")]
+    public static partial void SubmissionsApiCallFailed(
+        this ILogger logger,
+        int statusCode,
+        string path);
+
+    [LoggerMessage(
         EventId = 2000,
         Level = LogLevel.Information,
         Message = "Searching for {Name}, found {Result}")]

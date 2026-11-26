@@ -111,6 +111,13 @@ Local development uses the Defra ID stub values in `appsettings.Development.json
 Deployed environments must provide `Jwt__MetadataAddress` and `Jwt__Audience`
 configuration for the real Defra ID/API audience.
 
+Calls to the submissions API use this service's own token, not the caller's Defra ID
+token. Set `SubmitApi__BaseUrl` to
+`https://waste-batteries-submit-backend.<environment>.cdp-int.defra.cloud`.
+The audience is `waste-batteries-submit-backend`. On CDP the token comes from STS
+`GetWebIdentityToken` and is cached for at most 15 minutes. Locally `SubmitApi:Mode`
+is `Development` and `SubmitApi:DevToken` matches the submissions API.
+
 ### SonarCloud
 
 SonarCloud analysis runs from the pull request, publish and publish-hotfix GitHub Action workflows.
